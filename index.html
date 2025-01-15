@@ -65,34 +65,6 @@
             color: #666;
             margin-top: 0.5rem;
         }
-        .gauge {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-        }
-        
-        .gauge-arc-low { fill: #28a745; }
-        .gauge-arc-medium { fill: #ffc107; }
-        .gauge-arc-high { fill: #dc3545; }
-        
-        .gauge-needle {
-            fill: #464A4F;
-            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .gauge-center {
-            fill: #464A4F;
-        }
-        
-        .gauge-value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .gauge-label {
-            font-size: 12px;
-            fill: #666;
-        }
     </style>
 </head>
 <body class="bg-light">
@@ -319,63 +291,64 @@
             resultCard.classList.remove('d-none');
             resultCard.classList.add('animate__animated', 'animate__fadeIn');
             
-            const probability = result.fraud_probability * 100;
+            const rawProbability = result.fraud_probability * 100;
+            
+            // Convert raw probability to normalized display probability
+            let displayProbability;
+            if (rawProbability <= 11) {
+                // Normal range (0-11% maps to 0-30%)
+                displayProbability = (rawProbability / 11) * 30;
+            } else if (rawProbability <= 29) {
+                // Elevated range (12-29% maps to 31-70%)
+                displayProbability = 30 + ((rawProbability - 11) / 18) * 40;
+            } else {
+                // High risk range (30-36% maps to 71-100%)
+                displayProbability = 70 + ((rawProbability - 29) / 7) * 30;
+            }
+
             const probColor = 
-                probability > 30 ? '#dc3545' :
-                probability > 20 ? '#ffc107' :
-                probability > 10 ? '#17a2b8' :
-                '#28a745';
+                rawProbability > 30 ? '#dc3545' :  // High risk (red)
+                rawProbability > 20 ? '#ffc107' :  // Medium risk (yellow)
+                rawProbability > 10 ? '#17a2b8' :  // Elevated (blue)
+                '#28a745';                         // Normal (green)
 
-            // Create gauge visualization
+            // Clean, modern probability display
+            riskIndicator.style.backgroundColor = 'white';
+            riskIndicator.style.border = `4px solid ${probColor}`;
             riskIndicator.innerHTML = `
-                <div class="gauge">
-                    <svg viewBox="0 0 200 200">
-                        <g transform="translate(100,100)">
-                            <!-- Background arcs -->
-                            <path class="gauge-arc-low" 
-                                d="M-80,0 A80,80 0 0,1 -28,-75" 
-                                stroke="none"/>
-                            <path class="gauge-arc-medium" 
-                                d="M-28,-75 A80,80 0 0,1 28,-75" 
-                                stroke="none"/>
-                            <path class="gauge-arc-high" 
-                                d="M28,-75 A80,80 0 0,1 80,0" 
-                                stroke="none"/>
-                            
-                            <!-- Needle -->
-                            <g transform="rotate(${-90 + (probability * 1.8)})">
-                                <path class="gauge-needle" 
-                                    d="M-4,0 L0,-80 L4,0 Z"/>
-                                <circle class="gauge-center" 
-                                    cx="0" cy="0" r="6"/>
-                            </g>
-                            
-                            <!-- Value and label -->
-                            <text class="gauge-value" 
-                                x="0" y="20" 
-                                text-anchor="middle" 
-                                fill="${probColor}">
-                                ${probability.toFixed(1)}%
-                            </text>
-                            <text class="gauge-label" 
-                                x="0" y="40" 
-                                text-anchor="middle">
-                                Fraud Probability
-                            </text>
-                        </g>
-                    </svg>
+                <div class="text-center">
+                    <div style="font-size: 3.5rem; color: ${probColor}; font-weight: bold;">
+                        ${displayProbability.toFixed(1)}%
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem;">
+                        Relative Risk Level
+                    </div>
+                    <div style="color: #999; font-size: 0.8rem;">
+                        (Raw: ${rawProbability.toFixed(1)}%)
+                    </div>
                 </div>
             `;
 
-            // Update result content
+            // Update animation threshold for normalized probability
+            if (displayProbability > 70) {
+                riskIndicator.classList.add('pulse');
+            } else {
+                riskIndicator.classList.remove('pulse');
+            }
+            
+            // Clean result display with both probabilities
             resultContent.innerHTML = `
-                <div class="alert mb-3" style="background-color: ${probColor}; color: white;">
-                    <h4>Analysis Result</h4>
-                    <p>Decision: ${probability > 15 ? '🚫 SUSPICIOUS' : '✅ LEGITIMATE'}</p>
+                <div class="alert" style="background-color: ${probColor}; color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            ${rawProbability > 15 ? '🚫 SUSPICIOUS' : '✅ LEGITIMATE'}
+                        </h4>
+                        <span style="font-size: 0.9rem;">Risk Score: ${result.risk_score.toFixed(1)}</span>
+                    </div>
                 </div>
             `;
 
-            // Show risk factors
+            // Risk factors with cleaner styling
             if (result.risk_patterns) {
                 const riskPatterns = Object.entries(result.risk_patterns)
                     .filter(([_, value]) => value)
@@ -385,7 +358,10 @@
                     riskFactors.classList.remove('d-none');
                     riskFactorsList.innerHTML = riskPatterns
                         .map(pattern => `
-                            <div class="alert" style="background-color: rgba(0,0,0,0.05); border-left: 4px solid ${probColor}">
+                            <div class="alert mb-2 animate__animated animate__fadeIn" 
+                                 style="background-color: white; 
+                                        border-left: 4px solid ${probColor}; 
+                                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                 ${pattern}
                             </div>
                         `).join('');
@@ -405,11 +381,20 @@
             historyList.innerHTML = transactionHistory
                 .slice(0, 5)
                 .map(t => {
-                    const prob = t.fraud_probability * 100;
+                    const rawProb = t.fraud_probability * 100;
+                    let displayProb;
+                    if (rawProb <= 11) {
+                        displayProb = (rawProb / 11) * 30;
+                    } else if (rawProb <= 29) {
+                        displayProb = 30 + ((rawProb - 11) / 18) * 40;
+                    } else {
+                        displayProb = 70 + ((rawProb - 29) / 7) * 30;
+                    }
+
                     const probColor = 
-                        prob > 30 ? 'danger' :
-                        prob > 20 ? 'warning' :
-                        prob > 10 ? 'info' :
+                        rawProb > 30 ? 'danger' :
+                        rawProb > 20 ? 'warning' :
+                        rawProb > 10 ? 'info' :
                         'success';
                     
                     return `
@@ -420,7 +405,7 @@
                                     <small class="text-muted">(${t.transaction_type})</small>
                                 </div>
                                 <span class="badge bg-${probColor}">
-                                    ${prob.toFixed(1)}%
+                                    ${displayProb.toFixed(1)}%
                                 </span>
                             </div>
                         </div>
