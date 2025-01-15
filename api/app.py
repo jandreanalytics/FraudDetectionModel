@@ -197,14 +197,15 @@ def predict():
         X_scaled = scaler.transform(X)
         prediction = model.predict_proba(X_scaled)[0][1]
         
-        # Enhanced risk patterns detection with weighted scoring
+        # Enhanced risk patterns detection with location-based weighting
         pattern_risks = {
-            'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'UK', 'CN']),
+            'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'CN']),  # Removed UK from highest risk
+            'uk_location': bool(df['location'].iloc[0] == 'UK'),  # Separate UK check
             'time_anomaly': bool(0 <= df['hour'].iloc[0] <= 5),
             'amount_anomaly': bool(
-                df['amount'].iloc[0] < 10 or  # Small amount (card testing)
-                df['amount'].iloc[0] > 1000 or  # Large amount
-                (df['amount'].iloc[0] >= 900 and df['amount'].iloc[0] <= 999)  # Suspicious range
+                df['amount'].iloc[0] < 10 or
+                df['amount'].iloc[0] > 1000 or
+                (df['amount'].iloc[0] >= 900 and df['amount'].iloc[0] <= 999)
             ),
             'transaction_type_risk': bool(
                 (df['transaction_type'].iloc[0] == 'atm' and 0 <= df['hour'].iloc[0] <= 5) or
@@ -212,20 +213,21 @@ def predict():
             )
         }
 
-        # Calculate weighted risk score
+        # Calculate weighted risk score with location-specific weights
         risk_weights = {
-            'location_anomaly': 1,
+            'location_anomaly': 2,     # Higher weight for RU, BR, CN
+            'uk_location': 1,          # Lower weight for UK
             'time_anomaly': 1,
             'amount_anomaly': 1,
-            'transaction_type_risk': 2  # Double weight for transaction type risks
+            'transaction_type_risk': 1.5
         }
         
         risk_score = sum(risk_weights[k] for k, v in pattern_risks.items() if v)
         
-        # Adjust thresholds based on risk score
-        if risk_score >= 3:
+        # Adjust fraud level based on risk score and location
+        if risk_score >= 3 or (pattern_risks['location_anomaly'] and pattern_risks['time_anomaly']):
             fraud_level = "high"
-        elif risk_score >= 2:
+        elif risk_score >= 2 or pattern_risks['uk_location']:
             fraud_level = "medium"
         elif prediction > 0.30:
             fraud_level = "high"
@@ -234,12 +236,12 @@ def predict():
         else:
             fraud_level = "low"
 
-        # Force high risk for specific combinations
+        # Ensure Russia ATM at night is always high risk
         if (df['transaction_type'].iloc[0] == 'atm' and 
-            df['location'].iloc[0] in ['RU', 'BR', 'CN'] and 
+            df['location'].iloc[0] == 'RU' and 
             0 <= df['hour'].iloc[0] <= 5):
             fraud_level = "high"
-            prediction = max(prediction, 0.35)  # Ensure high probability
+            prediction = max(prediction, 0.35)
 
         return jsonify({
             'transaction_id': data.get('transaction_id'),

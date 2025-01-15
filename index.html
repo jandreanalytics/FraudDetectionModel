@@ -125,13 +125,13 @@
                         <h5 class="card-title">Quick Test Scenarios</h5>
                         <div class="list-group">
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('safe')">
-                                ✅ Safe Transaction (SF, POS, $75.50)
+                                ✅ Safe Transaction (NY, POS, $75.50)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
-                                ⚠️ Card Testing (RU, Online, $2.50)
+                                ⚠️ Suspicious Activity (UK, Online, $999.99)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
-                                🚨 Night ATM (BR, ATM, $400.00)
+                                🚨 High Risk (RU, ATM at night, $5.00)
                             </button>
                         </div>
                         <div class="tips mt-3">
@@ -196,29 +196,42 @@
         const scenarios = {
             safe: {
                 amount: 75.50,
-                location: 'SF',
+                location: 'NY',        // Changed from SF to NY
                 transaction_type: 'pos',
                 merchant_category: 'retail',
                 time: '14:30',
                 description: 'Regular retail POS at daytime'
             },
             suspicious: {
-                amount: 2.50,
-                location: 'RU',
+                amount: 999.99,        // Changed to suspicious amount
+                location: 'UK',
                 transaction_type: 'online',
                 merchant_category: 'online',
                 time: '03:15',
-                description: 'Card testing pattern (small amount, risky location)'
+                description: 'Suspicious online transaction'
             },
             risky: {
-                amount: 400.00,
-                location: 'BR',
+                amount: 5.00,          // Changed to very small amount
+                location: 'RU',
                 transaction_type: 'atm',
                 merchant_category: 'retail',
                 time: '02:00',
-                description: 'Suspicious ATM withdrawal at night'
+                description: 'High-risk ATM withdrawal'
             }
         };
+
+        // Update the Quick Test Scenarios buttons HTML:
+        document.querySelector('.list-group').innerHTML = `
+            <button class="list-group-item list-group-item-action" onclick="loadScenario('safe')">
+                ✅ Safe Transaction (NY, POS, $75.50)
+            </button>
+            <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
+                ⚠️ Suspicious Activity (UK, Online, $999.99)
+            </button>
+            <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
+                🚨 High Risk (RU, ATM at night, $5.00)
+            </button>
+        `;
 
         function loadScenario(type) {
             const form = document.getElementById('transactionForm');
