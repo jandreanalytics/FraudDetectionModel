@@ -65,6 +65,34 @@
             color: #666;
             margin-top: 0.5rem;
         }
+        .gauge {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        
+        .gauge-arc-low { fill: #28a745; }
+        .gauge-arc-medium { fill: #ffc107; }
+        .gauge-arc-high { fill: #dc3545; }
+        
+        .gauge-needle {
+            fill: #464A4F;
+            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .gauge-center {
+            fill: #464A4F;
+        }
+        
+        .gauge-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .gauge-label {
+            font-size: 12px;
+            fill: #666;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -293,50 +321,61 @@
             
             const probability = result.fraud_probability * 100;
             const probColor = 
-                probability > 30 ? '#dc3545' :  // Red for >30%
-                probability > 20 ? '#ffc107' :  // Yellow for 20-30%
-                probability > 10 ? '#17a2b8' :  // Blue for 10-20%
-                '#28a745';                      // Green for <10%
+                probability > 30 ? '#dc3545' :
+                probability > 20 ? '#ffc107' :
+                probability > 10 ? '#17a2b8' :
+                '#28a745';
 
-            // New gauge-style visualization
+            // Create gauge visualization
             riskIndicator.innerHTML = `
-                <div class="text-center">
-                    <svg width="150" height="150" viewBox="0 0 150 150">
-                        <path d="M 75 75 L 75 20 A 55 55 0 ${probability > 50 ? 1 : 0} 1 ${
-                            75 + 55 * Math.sin(Math.PI * (probability/50))
-                        } ${
-                            75 - 55 * Math.cos(Math.PI * (probability/50))
-                        }" 
-                        stroke="${probColor}" 
-                        stroke-width="10" 
-                        fill="none"/>
-                        <text x="75" y="85" text-anchor="middle" font-size="24" fill="${probColor}">
-                            ${probability.toFixed(1)}%
-                        </text>
-                        <text x="75" y="105" text-anchor="middle" font-size="12" fill="#666">
-                            Fraud Probability
-                        </text>
+                <div class="gauge">
+                    <svg viewBox="0 0 200 200">
+                        <g transform="translate(100,100)">
+                            <!-- Background arcs -->
+                            <path class="gauge-arc-low" 
+                                d="M-80,0 A80,80 0 0,1 -28,-75" 
+                                stroke="none"/>
+                            <path class="gauge-arc-medium" 
+                                d="M-28,-75 A80,80 0 0,1 28,-75" 
+                                stroke="none"/>
+                            <path class="gauge-arc-high" 
+                                d="M28,-75 A80,80 0 0,1 80,0" 
+                                stroke="none"/>
+                            
+                            <!-- Needle -->
+                            <g transform="rotate(${-90 + (probability * 1.8)})">
+                                <path class="gauge-needle" 
+                                    d="M-4,0 L0,-80 L4,0 Z"/>
+                                <circle class="gauge-center" 
+                                    cx="0" cy="0" r="6"/>
+                            </g>
+                            
+                            <!-- Value and label -->
+                            <text class="gauge-value" 
+                                x="0" y="20" 
+                                text-anchor="middle" 
+                                fill="${probColor}">
+                                ${probability.toFixed(1)}%
+                            </text>
+                            <text class="gauge-label" 
+                                x="0" y="40" 
+                                text-anchor="middle">
+                                Fraud Probability
+                            </text>
+                        </g>
                     </svg>
                 </div>
             `;
 
-            // Add pulse animation for high probability
-            if (probability > 30) {
-                riskIndicator.classList.add('pulse');
-            } else {
-                riskIndicator.classList.remove('pulse');
-            }
-            
-            // Update content with more detailed information
+            // Update result content
             resultContent.innerHTML = `
-                <div class="alert" style="background-color: ${probColor}; color: white;">
+                <div class="alert mb-3" style="background-color: ${probColor}; color: white;">
                     <h4>Analysis Result</h4>
-                    <p>Fraud Probability: ${probability.toFixed(1)}%</p>
                     <p>Decision: ${probability > 15 ? '🚫 SUSPICIOUS' : '✅ LEGITIMATE'}</p>
                 </div>
             `;
 
-            // Show risk factors with improved styling
+            // Show risk factors
             if (result.risk_patterns) {
                 const riskPatterns = Object.entries(result.risk_patterns)
                     .filter(([_, value]) => value)
