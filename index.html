@@ -195,28 +195,25 @@
 
         const scenarios = {
             safe: {
-                amount: 50.00,
+                amount: 50.00,         // Exact match for "NY, POS, $50"
                 location: 'NY',
                 transaction_type: 'pos',
-                merchant_category: 'retail',
                 time: '14:30',
-                description: 'Regular retail POS transaction'
+                description: 'Safe Transaction (NY, POS, $50)'
             },
             suspicious: {
-                amount: 2.50,        // Changed to small amount for card testing
+                amount: 999.00,        // Exact match for "UK, Online, $999"
                 location: 'UK',
                 transaction_type: 'online',
-                merchant_category: 'online',
                 time: '03:15',
-                description: 'Suspicious card testing pattern'
+                description: 'Suspicious Activity (UK, Online, $999)'
             },
             risky: {
-                amount: 400.00,      // Changed to match test case
+                amount: 5.00,          // Exact match for "RU, ATM at night, $5"
                 location: 'RU',
                 transaction_type: 'atm',
-                merchant_category: 'retail',
                 time: '02:30',
-                description: 'High-risk ATM withdrawal'
+                description: 'High Risk (RU, ATM at night, $5)'
             }
         };
 
@@ -224,13 +221,13 @@
             const form = document.getElementById('transactionForm');
             const scenario = scenarios[type];
             
-            // Set all form values
+            // Set form values exactly as shown in the button text
             form.amount.value = scenario.amount;
             form.location.value = scenario.location;
             form.transaction_type.value = scenario.transaction_type;
             form.time.value = scenario.time;
             
-            // Trigger form submission automatically
+            // Submit the form immediately
             form.querySelector('button[type="submit"]').click();
         }
 
