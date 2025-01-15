@@ -88,6 +88,11 @@
                                 <div class="form-text">Try amounts like $999 or small amounts under $10</div>
                             </div>
                             <div class="mb-3">
+                                <label>Time</label>
+                                <input type="time" class="form-control" name="time" required value="12:00">
+                                <div class="form-text">Transactions between 00:00-06:00 are considered high-risk</div>
+                            </div>
+                            <div class="mb-3">
                                 <label>Location</label>
                                 <select class="form-control" name="location" required>
                                     <option value="NY">New York</option>
@@ -190,19 +195,36 @@
 
         const scenarios = {
             safe: {
-                amount: 50.00,
-                location: 'NY',
-                transaction_type: 'pos'
+                amount: 75.50,
+                location: 'SF',
+                transaction_type: 'pos',
+                merchant_category: 'retail',
+                time: '14:30',
+                description: 'Regular retail POS transaction during business hours'
             },
             suspicious: {
-                amount: 999.99,
-                location: 'UK',
-                transaction_type: 'online'
+                amount: 2.50,
+                location: 'RU',
+                transaction_type: 'online',
+                merchant_category: 'online',
+                time: '03:15',
+                description: 'Card testing pattern during night hours'
             },
             risky: {
-                amount: 5.00,
-                location: 'RU',
-                transaction_type: 'atm'
+                amount: 400.00,
+                location: 'BR',
+                transaction_type: 'atm',
+                merchant_category: 'retail',
+                time: '02:30',
+                description: 'Late night ATM in high-risk location'
+            },
+            anomaly: {
+                amount: 850.00,
+                location: 'CN',
+                transaction_type: 'pos',
+                merchant_category: 'travel',
+                time: '23:45',
+                description: 'Location anomaly with large amount'
             }
         };
 
@@ -212,6 +234,17 @@
             form.amount.value = scenario.amount;
             form.location.value = scenario.location;
             form.transaction_type.value = scenario.transaction_type;
+            form.time.value = scenario.time;
+            
+            // Add toast notification to explain the scenario
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-info alert-dismissible fade show position-fixed bottom-0 end-0 m-3';
+            toast.innerHTML = `
+                <strong>Test Scenario:</strong> ${scenario.description}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
         }
 
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
@@ -219,9 +252,14 @@
             const form = e.target;
             form.closest('.card').classList.add('loading');
             
+            // Get current date and combine with selected time
+            const now = new Date();
+            const [hours, minutes] = form.time.value.split(':');
+            now.setHours(parseInt(hours), parseInt(minutes), 0);
+            
             const data = {
                 transaction_id: Date.now(),
-                timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                timestamp: now.toISOString().slice(0, 19).replace('T', ' '),
                 amount: parseFloat(form.amount.value),
                 location: form.location.value,
                 transaction_type: form.transaction_type.value,
