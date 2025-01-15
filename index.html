@@ -125,13 +125,13 @@
                         <h5 class="card-title">Quick Test Scenarios</h5>
                         <div class="list-group">
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('safe')">
-                                ✅ Safe Transaction (NY, POS, $75.50)
+                                🔍 Regular Transaction (NY, POS, $75.50)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
-                                🚨 High Risk (UK, Online, $999.99)
+                                🔍 UK Online Transaction (UK, Online, $999.99)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
-                                ⚠️ Medium Risk (RU, ATM at night, $5.00)
+                                🔍 Night ATM (RU, ATM, $5.00)
                             </button>
                         </div>
                         <div class="tips mt-3">
@@ -198,38 +198,35 @@
                 amount: 75.50,
                 location: 'NY',
                 transaction_type: 'pos',
-                merchant_category: 'retail',
                 time: '14:30',
-                description: 'Regular retail POS at daytime'
+                description: 'Regular retail transaction (Expected: ~3%)'
             },
             suspicious: {
-                amount: 999.99,        // Large amount
+                amount: 999.99,
                 location: 'UK',
                 transaction_type: 'online',
-                merchant_category: 'online',
                 time: '03:15',
-                description: 'High-risk online transaction'
+                description: 'Large online transaction (Expected: ~33%)'
             },
             risky: {
                 amount: 5.00,
                 location: 'RU',
                 transaction_type: 'atm',
-                merchant_category: 'retail',
                 time: '02:00',
-                description: 'Suspicious ATM withdrawal'
+                description: 'ATM withdrawal (Expected: ~28%)'
             }
         };
 
-        // Update scenario button descriptions
+        // Update scenario buttons with probability focus
         document.querySelector('.list-group').innerHTML = `
             <button class="list-group-item list-group-item-action" onclick="loadScenario('safe')">
-                ✅ Safe Transaction (NY, POS, $75.50)
+                🔍 Regular Transaction (NY, POS, $75.50)
             </button>
             <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
-                🚨 High Risk (UK, Online, $999.99)
+                🔍 UK Online Transaction (UK, Online, $999.99)
             </button>
             <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
-                ⚠️ Medium Risk (RU, ATM at night, $5.00)
+                🔍 Night ATM (RU, ATM, $5.00)
             </button>
         `;
 
@@ -294,31 +291,25 @@
             resultCard.classList.remove('d-none');
             resultCard.classList.add('animate__animated', 'animate__fadeIn');
             
-            const riskColors = {
-                high: '#dc3545',
-                medium: '#ffc107',
-                low: '#17a2b8',
-                none: '#28a745'
-            };
+            const probability = result.fraud_probability * 100;
+            const probColor = 
+                probability > 30 ? '#dc3545' :  // Red for >30%
+                probability > 20 ? '#ffc107' :  // Yellow for 20-30%
+                probability > 10 ? '#17a2b8' :  // Blue for 10-20%
+                '#28a745';                      // Green for <10%
 
-            const emoji = {
-                high: '🚨',
-                medium: '⚠️',
-                low: '📊',
-                none: '✅'
-            };
-            
-            // Update risk indicator
-            riskIndicator.style.backgroundColor = riskColors[result.fraud_level];
+            // Update probability indicator
+            riskIndicator.style.backgroundColor = probColor;
             riskIndicator.innerHTML = `
                 <div class="text-center text-white">
-                    <div style="font-size: 3rem;">${emoji[result.fraud_level]}</div>
-                    <div style="font-size: 1.2rem;">${(result.fraud_probability * 100).toFixed(1)}%</div>
+                    <div style="font-size: 3rem">🎲</div>
+                    <div style="font-size: 1.5rem">${probability.toFixed(1)}%</div>
+                    <div style="font-size: 0.9rem">Fraud Probability</div>
                 </div>
             `;
-            
-            // Add pulse animation for high risk
-            if (result.fraud_level === 'high') {
+
+            // Add pulse animation for high probability
+            if (probability > 30) {
                 riskIndicator.classList.add('pulse');
             } else {
                 riskIndicator.classList.remove('pulse');
@@ -326,26 +317,26 @@
             
             // Update content
             resultContent.innerHTML = `
-                <div class="alert alert-${result.fraud_level === 'high' ? 'danger' : 
-                                        result.fraud_level === 'medium' ? 'warning' : 
-                                        result.fraud_level === 'low' ? 'info' : 'success'}">
-                    <h4>${emoji[result.fraud_level]} Risk Level: ${result.fraud_level.toUpperCase()}</h4>
-                    <p>Decision: ${result.is_fraud ? '🚫 SUSPICIOUS' : '✅ LEGITIMATE'}</p>
+                <div class="alert" style="background-color: ${probColor}; color: white;">
+                    <h4>Fraud Probability: ${probability.toFixed(1)}%</h4>
+                    <p>Decision: ${probability > 15 ? '🚫 SUSPICIOUS' : '✅ LEGITIMATE'}</p>
                 </div>
             `;
 
-            // Show risk factors if any exist
-            const riskPatterns = Object.entries(result.risk_patterns)
-                .filter(([_, value]) => value)
-                .map(([key]) => key.replace(/_/g, ' ').toUpperCase());
+            // Show risk factors
+            if (result.risk_patterns) {
+                const riskPatterns = Object.entries(result.risk_patterns)
+                    .filter(([_, value]) => value)
+                    .map(([key]) => key.replace(/_/g, ' ').toUpperCase());
 
-            if (riskPatterns.length > 0) {
-                riskFactors.classList.remove('d-none');
-                riskFactorsList.innerHTML = riskPatterns
-                    .map(pattern => `<div class="alert alert-warning mb-2">${pattern}</div>`)
-                    .join('');
-            } else {
-                riskFactors.classList.add('d-none');
+                if (riskPatterns.length > 0) {
+                    riskFactors.classList.remove('d-none');
+                    riskFactorsList.innerHTML = riskPatterns
+                        .map(pattern => `<div class="alert alert-secondary mb-2">${pattern}</div>`)
+                        .join('');
+                } else {
+                    riskFactors.classList.add('d-none');
+                }
             }
         }
 
@@ -358,21 +349,28 @@
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = transactionHistory
                 .slice(0, 5)
-                .map(t => `
-                    <div class="list-group-item history-item risk-${t.fraud_level}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>$${t.amount.toFixed(2)}</strong> - ${t.location}
-                                <small class="text-muted">(${t.transaction_type})</small>
+                .map(t => {
+                    const prob = t.fraud_probability * 100;
+                    const probColor = 
+                        prob > 30 ? 'danger' :
+                        prob > 20 ? 'warning' :
+                        prob > 10 ? 'info' :
+                        'success';
+                    
+                    return `
+                        <div class="list-group-item history-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>$${t.amount.toFixed(2)}</strong> - ${t.location}
+                                    <small class="text-muted">(${t.transaction_type})</small>
+                                </div>
+                                <span class="badge bg-${probColor}">
+                                    ${prob.toFixed(1)}%
+                                </span>
                             </div>
-                            <span class="badge bg-${t.fraud_level === 'high' ? 'danger' : 
-                                                t.fraud_level === 'medium' ? 'warning' : 
-                                                t.fraud_level === 'low' ? 'info' : 'success'}">
-                                ${(t.fraud_probability * 100).toFixed(1)}%
-                            </span>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
         }
     </script>
 </body>
