@@ -197,14 +197,14 @@ def predict():
         X_scaled = scaler.transform(X)
         prediction = model.predict_proba(X_scaled)[0][1]
         
-        # Simplified risk patterns without UK special case
+        # Enhanced pattern detection with more specific amount checks
         pattern_risks = {
             'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'CN', 'UK']),
             'time_anomaly': bool(0 <= df['hour'].iloc[0] <= 5),
             'amount_anomaly': bool(
-                df['amount'].iloc[0] < 10 or
-                df['amount'].iloc[0] > 1000 or
-                (df['amount'].iloc[0] >= 900 and df['amount'].iloc[0] <= 999)
+                df['amount'].iloc[0] < 10 or  # Small amounts (card testing)
+                df['amount'].iloc[0] > 500 or  # Large amounts
+                (df['amount'].iloc[0] >= 900 and df['amount'].iloc[0] <= 999.99)  # Suspicious range
             ),
             'transaction_type_risk': bool(
                 (df['transaction_type'].iloc[0] == 'atm' and 0 <= df['hour'].iloc[0] <= 5) or
@@ -212,11 +212,11 @@ def predict():
             )
         }
 
-        # More balanced risk weights
+        # Adjusted risk weights to account for amount anomalies more strongly
         risk_weights = {
             'location_anomaly': 1.5,
             'time_anomaly': 1.0,
-            'amount_anomaly': 1.5,
+            'amount_anomaly': 2.0,  # Increased weight for amount anomalies
             'transaction_type_risk': 1.5
         }
         
