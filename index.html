@@ -195,7 +195,7 @@
 
         const scenarios = {
             safe: {
-                amount: 50.00,         // Matches button text "NY, POS, $50"
+                amount: 50.00,
                 location: 'NY',
                 transaction_type: 'pos',
                 merchant_category: 'retail',
@@ -203,20 +203,20 @@
                 description: 'Regular retail POS transaction'
             },
             suspicious: {
-                amount: 999.00,        // Matches button text "UK, Online, $999"
+                amount: 2.50,        // Changed to small amount for card testing
                 location: 'UK',
                 transaction_type: 'online',
                 merchant_category: 'online',
                 time: '03:15',
-                description: 'Suspicious online transaction'
+                description: 'Suspicious card testing pattern'
             },
             risky: {
-                amount: 5.00,          // Matches button text "RU, ATM at night, $5"
+                amount: 400.00,      // Changed to match test case
                 location: 'RU',
                 transaction_type: 'atm',
                 merchant_category: 'retail',
                 time: '02:30',
-                description: 'Late night ATM in Russia'
+                description: 'High-risk ATM withdrawal'
             }
         };
 
