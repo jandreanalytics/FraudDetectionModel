@@ -210,18 +210,19 @@ def predict():
             )
         }
         
-        # Thresholds
-        base_threshold = 0.25
-        if pattern_risks['location_anomaly']:
-            base_threshold = 0.2
-        if sum(pattern_risks.values()) >= 2:
-            base_threshold = 0.15
+        # Updated thresholds based on actual probability distributions
+        base_threshold = 0.15  # Lowered from 0.25
         
-        # Fraud level
+        if pattern_risks['location_anomaly']:
+            base_threshold = 0.12  # Lowered from 0.2
+        if sum(pattern_risks.values()) >= 2:
+            base_threshold = 0.10  # Lowered from 0.15
+        
+        # Adjusted fraud level thresholds
         fraud_level = "none"
-        if prediction > 0.7:
+        if prediction > 0.35:  # Changed from 0.7
             fraud_level = "high"
-        elif prediction > 0.4:
+        elif prediction > 0.25:  # Changed from 0.4
             fraud_level = "medium"
         elif prediction > base_threshold:
             fraud_level = "low"

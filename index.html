@@ -195,56 +195,43 @@
 
         const scenarios = {
             safe: {
-                amount: 75.50,
-                location: 'SF',
+                amount: 50.00,         // Matches button text "NY, POS, $50"
+                location: 'NY',
                 transaction_type: 'pos',
                 merchant_category: 'retail',
                 time: '14:30',
-                description: 'Regular retail POS transaction during business hours'
+                description: 'Regular retail POS transaction'
             },
             suspicious: {
-                amount: 2.50,
-                location: 'RU',
+                amount: 999.00,        // Matches button text "UK, Online, $999"
+                location: 'UK',
                 transaction_type: 'online',
                 merchant_category: 'online',
                 time: '03:15',
-                description: 'Card testing pattern during night hours'
+                description: 'Suspicious online transaction'
             },
             risky: {
-                amount: 400.00,
-                location: 'BR',
+                amount: 5.00,          // Matches button text "RU, ATM at night, $5"
+                location: 'RU',
                 transaction_type: 'atm',
                 merchant_category: 'retail',
                 time: '02:30',
-                description: 'Late night ATM in high-risk location'
-            },
-            anomaly: {
-                amount: 850.00,
-                location: 'CN',
-                transaction_type: 'pos',
-                merchant_category: 'travel',
-                time: '23:45',
-                description: 'Location anomaly with large amount'
+                description: 'Late night ATM in Russia'
             }
         };
 
         function loadScenario(type) {
             const form = document.getElementById('transactionForm');
             const scenario = scenarios[type];
+            
+            // Set all form values
             form.amount.value = scenario.amount;
             form.location.value = scenario.location;
             form.transaction_type.value = scenario.transaction_type;
             form.time.value = scenario.time;
             
-            // Add toast notification to explain the scenario
-            const toast = document.createElement('div');
-            toast.className = 'alert alert-info alert-dismissible fade show position-fixed bottom-0 end-0 m-3';
-            toast.innerHTML = `
-                <strong>Test Scenario:</strong> ${scenario.description}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
+            // Trigger form submission automatically
+            form.querySelector('button[type="submit"]').click();
         }
 
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
