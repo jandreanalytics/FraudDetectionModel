@@ -197,10 +197,9 @@ def predict():
         X_scaled = scaler.transform(X)
         prediction = model.predict_proba(X_scaled)[0][1]
         
-        # Enhanced risk patterns detection with better location differentiation
+        # Simplified risk patterns without UK special case
         pattern_risks = {
-            'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'CN']),
-            'uk_online': bool(df['location'].iloc[0] == 'UK' and df['transaction_type'].iloc[0] == 'online'),
+            'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'CN', 'UK']),
             'time_anomaly': bool(0 <= df['hour'].iloc[0] <= 5),
             'amount_anomaly': bool(
                 df['amount'].iloc[0] < 10 or
@@ -213,47 +212,21 @@ def predict():
             )
         }
 
-        # More nuanced risk scoring
+        # More balanced risk weights
         risk_weights = {
-            'location_anomaly': 1,     # Reduced weight for location alone
-            'uk_online': 2,            # Higher weight for UK online transactions
-            'time_anomaly': 1,
+            'location_anomaly': 1.5,
+            'time_anomaly': 1.0,
             'amount_anomaly': 1.5,
             'transaction_type_risk': 1.5
         }
         
         risk_score = sum(risk_weights[k] for k, v in pattern_risks.items() if v)
 
-        # Adjusted fraud level determination
-        if pattern_risks['uk_online'] and pattern_risks['amount_anomaly']:
-            fraud_level = "high"
-            prediction = max(prediction, 0.40)  # Ensure high probability for UK suspicious online
-        elif pattern_risks['location_anomaly'] and pattern_risks['transaction_type_risk']:
-            fraud_level = "medium"
-            prediction = max(prediction, 0.25)  # Set medium probability for risky locations
-        elif risk_score >= 3:
-            fraud_level = "high"
-        elif risk_score >= 2:
-            fraud_level = "medium"
-        elif prediction > 0.35:
-            fraud_level = "high"
-        elif prediction > 0.25:
-            fraud_level = "medium"
-        else:
-            fraud_level = "low"
-
-        # Ensure Russia ATM at night is always high risk
-        if (df['transaction_type'].iloc[0] == 'atm' and 
-            df['location'].iloc[0] == 'RU' and 
-            0 <= df['hour'].iloc[0] <= 5):
-            fraud_level = "high"
-            prediction = max(prediction, 0.35)
-
+        # Return raw probability without fraud levels
         return jsonify({
             'transaction_id': data.get('transaction_id'),
             'fraud_probability': float(prediction),
-            'fraud_level': fraud_level,
-            'is_fraud': bool(fraud_level in ["medium", "high"]),
+            'is_fraud': bool(prediction > 0.15),  # Basic threshold
             'risk_patterns': pattern_risks,
             'risk_score': risk_score
         })
