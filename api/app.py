@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import joblib
 import pandas as pd
 import numpy as np
@@ -6,7 +7,13 @@ from datetime import datetime, timedelta  # Add datetime import
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000", "https://your-frontend-domain.com"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Load model, scaler, and feature names - update paths for production
 MODEL_PATH = os.getenv('MODEL_PATH', 'models/fraud_model.pkl')
@@ -228,6 +235,10 @@ def predict():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+@app.route('/api/v1/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "API is running"}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

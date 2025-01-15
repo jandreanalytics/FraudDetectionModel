@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from flask_cors import CORS
 import os
 
@@ -7,8 +7,7 @@ CORS(app)
 
 @app.route('/')
 def index():
-    api_url = os.getenv('API_URL', 'http://localhost:5000')
-    return render_template('index.html', api_url=api_url)
+    return render_template('index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

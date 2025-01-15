@@ -3,16 +3,7 @@ services:
     name: fraud-detection-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn api.app:app
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.8.0
-
-  - type: web
-    name: fraud-detection-ui
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn web.app:app
+    startCommand: gunicorn api.app:app --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.8.0

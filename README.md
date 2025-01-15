@@ -1,24 +1,28 @@
-# Financial Fraud Detection System
+# Fraud Detection System
 
-A real-time fraud detection system using machine learning to identify suspicious financial transactions.
+A real-time transaction fraud detection system using machine learning.
 
-## Overview
-
-This project implements a machine learning-based fraud detection system that:
-
-- Processes financial transaction data
-- Uses supervised learning to identify fraudulent patterns
-- Provides real-time fraud detection via REST API
-- Includes a web dashboard for visualization
+## Features
+- Real-time transaction analysis
+- ML-powered risk assessment
+- Pattern recognition
+- Interactive demo interface
+- RESTful API architecture
 
 ## Tech Stack
+- Backend: Python, Flask, scikit-learn
+- Frontend: HTML5, Bootstrap, JavaScript
+- ML: Random Forest Classifier
+- Deployment: Docker, Render
 
-- Python 3.8+
-- Scikit-Learn for ML models
-- Flask for API
-- Pandas for data processing
-- Plotly/Dash for visualization
-- Heroku for deployment
+## Live Demo
+[Link to your deployed demo]
+
+## API Documentation
+[Link to API docs or include them here]
+
+## Screenshots
+[Add screenshots of the interface]
 
 ## Installation
 
