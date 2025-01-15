@@ -125,13 +125,13 @@
                         <h5 class="card-title">Quick Test Scenarios</h5>
                         <div class="list-group">
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('safe')">
-                                ✅ Safe Transaction (NY, POS, $50)
+                                ✅ Safe Transaction (SF, POS, $75.50)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
-                                ⚠️ Suspicious Activity (UK, Online, $999)
+                                ⚠️ Card Testing (RU, Online, $2.50)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
-                                🚨 High Risk (RU, ATM at night, $5)
+                                🚨 Night ATM (BR, ATM, $400.00)
                             </button>
                         </div>
                         <div class="tips mt-3">
@@ -195,25 +195,28 @@
 
         const scenarios = {
             safe: {
-                amount: 50.00,         // Exact match for "NY, POS, $50"
-                location: 'NY',
+                amount: 75.50,
+                location: 'SF',
                 transaction_type: 'pos',
+                merchant_category: 'retail',
                 time: '14:30',
-                description: 'Safe Transaction (NY, POS, $50)'
+                description: 'Regular retail POS at daytime'
             },
             suspicious: {
-                amount: 999.00,        // Exact match for "UK, Online, $999"
-                location: 'UK',
+                amount: 2.50,
+                location: 'RU',
                 transaction_type: 'online',
+                merchant_category: 'online',
                 time: '03:15',
-                description: 'Suspicious Activity (UK, Online, $999)'
+                description: 'Card testing pattern (small amount, risky location)'
             },
             risky: {
-                amount: 5.00,          // Exact match for "RU, ATM at night, $5"
-                location: 'RU',
+                amount: 400.00,
+                location: 'BR',
                 transaction_type: 'atm',
-                time: '02:30',
-                description: 'High Risk (RU, ATM at night, $5)'
+                merchant_category: 'retail',
+                time: '02:00',
+                description: 'Suspicious ATM withdrawal at night'
             }
         };
 
