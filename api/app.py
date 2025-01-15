@@ -197,10 +197,10 @@ def predict():
         X_scaled = scaler.transform(X)
         prediction = model.predict_proba(X_scaled)[0][1]
         
-        # Enhanced risk patterns detection with location-based weighting
+        # Enhanced risk patterns detection with better location differentiation
         pattern_risks = {
-            'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'CN']),  # Removed UK from highest risk
-            'uk_location': bool(df['location'].iloc[0] == 'UK'),  # Separate UK check
+            'location_anomaly': bool(df['location'].iloc[0] in ['RU', 'BR', 'CN']),
+            'uk_online': bool(df['location'].iloc[0] == 'UK' and df['transaction_type'].iloc[0] == 'online'),
             'time_anomaly': bool(0 <= df['hour'].iloc[0] <= 5),
             'amount_anomaly': bool(
                 df['amount'].iloc[0] < 10 or
@@ -213,25 +213,31 @@ def predict():
             )
         }
 
-        # Calculate weighted risk score with location-specific weights
+        # More nuanced risk scoring
         risk_weights = {
-            'location_anomaly': 2,     # Higher weight for RU, BR, CN
-            'uk_location': 1,          # Lower weight for UK
+            'location_anomaly': 1,     # Reduced weight for location alone
+            'uk_online': 2,            # Higher weight for UK online transactions
             'time_anomaly': 1,
-            'amount_anomaly': 1,
+            'amount_anomaly': 1.5,
             'transaction_type_risk': 1.5
         }
         
         risk_score = sum(risk_weights[k] for k, v in pattern_risks.items() if v)
-        
-        # Adjust fraud level based on risk score and location
-        if risk_score >= 3 or (pattern_risks['location_anomaly'] and pattern_risks['time_anomaly']):
+
+        # Adjusted fraud level determination
+        if pattern_risks['uk_online'] and pattern_risks['amount_anomaly']:
             fraud_level = "high"
-        elif risk_score >= 2 or pattern_risks['uk_location']:
+            prediction = max(prediction, 0.40)  # Ensure high probability for UK suspicious online
+        elif pattern_risks['location_anomaly'] and pattern_risks['transaction_type_risk']:
             fraud_level = "medium"
-        elif prediction > 0.30:
+            prediction = max(prediction, 0.25)  # Set medium probability for risky locations
+        elif risk_score >= 3:
             fraud_level = "high"
-        elif prediction > 0.20:
+        elif risk_score >= 2:
+            fraud_level = "medium"
+        elif prediction > 0.35:
+            fraud_level = "high"
+        elif prediction > 0.25:
             fraud_level = "medium"
         else:
             fraud_level = "low"

@@ -128,10 +128,10 @@
                                 ✅ Safe Transaction (NY, POS, $75.50)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
-                                ⚠️ Suspicious Activity (UK, Online, $999.99)
+                                🚨 High Risk (UK, Online, $999.99)
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
-                                🚨 High Risk (RU, ATM at night, $5.00)
+                                ⚠️ Medium Risk (RU, ATM at night, $5.00)
                             </button>
                         </div>
                         <div class="tips mt-3">
@@ -196,40 +196,40 @@
         const scenarios = {
             safe: {
                 amount: 75.50,
-                location: 'NY',        // Changed from SF to NY
+                location: 'NY',
                 transaction_type: 'pos',
                 merchant_category: 'retail',
                 time: '14:30',
                 description: 'Regular retail POS at daytime'
             },
             suspicious: {
-                amount: 999.99,        // Changed to suspicious amount
+                amount: 999.99,        // Large amount
                 location: 'UK',
                 transaction_type: 'online',
                 merchant_category: 'online',
                 time: '03:15',
-                description: 'Suspicious online transaction'
+                description: 'High-risk online transaction'
             },
             risky: {
-                amount: 5.00,          // Changed to very small amount
+                amount: 5.00,
                 location: 'RU',
                 transaction_type: 'atm',
                 merchant_category: 'retail',
                 time: '02:00',
-                description: 'High-risk ATM withdrawal'
+                description: 'Suspicious ATM withdrawal'
             }
         };
 
-        // Update the Quick Test Scenarios buttons HTML:
+        // Update scenario button descriptions
         document.querySelector('.list-group').innerHTML = `
             <button class="list-group-item list-group-item-action" onclick="loadScenario('safe')">
                 ✅ Safe Transaction (NY, POS, $75.50)
             </button>
             <button class="list-group-item list-group-item-action" onclick="loadScenario('suspicious')">
-                ⚠️ Suspicious Activity (UK, Online, $999.99)
+                🚨 High Risk (UK, Online, $999.99)
             </button>
             <button class="list-group-item list-group-item-action" onclick="loadScenario('risky')">
-                🚨 High Risk (RU, ATM at night, $5.00)
+                ⚠️ Medium Risk (RU, ATM at night, $5.00)
             </button>
         `;
 
