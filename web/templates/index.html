@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fraud Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .result-card { display: none; }
+        .risk-high { background-color: #ffebee; }
+        .risk-medium { background-color: #fff3e0; }
+        .risk-low { background-color: #f1f8e9; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Fraud Detection System</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Test Transaction</h5>
+                <form id="transactionForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Amount ($)</label>
+                            <input type="number" class="form-control" name="amount" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Location</label>
+                            <select class="form-control" name="location" required>
+                                <option value="NY">New York</option>
+                                <option value="LA">Los Angeles</option>
+                                <option value="CH">Chicago</option>
+                                <option value="HO">Houston</option>
+                                <option value="SF">San Francisco</option>
+                                <option value="UK">United Kingdom</option>
+                                <option value="RU">Russia</option>
+                                <option value="BR">Brazil</option>
+                                <option value="CN">China</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Transaction Type</label>
+                            <select class="form-control" name="transaction_type" required>
+                                <option value="pos">POS</option>
+                                <option value="online">Online</option>
+                                <option value="atm">ATM</option>
+                                <option value="recurring">Recurring</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Merchant Category</label>
+                            <select class="form-control" name="merchant_category" required>
+                                <option value="retail">Retail</option>
+                                <option value="dining">Dining</option>
+                                <option value="travel">Travel</option>
+                                <option value="online">Online</option>
+                                <option value="entertainment">Entertainment</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Check Transaction</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="resultCard" class="card result-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Analysis Result</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Fraud Probability:</strong> <span id="fraudProb"></span></p>
+                        <p><strong>Risk Level:</strong> <span id="riskLevel"></span></p>
+                        <p><strong>Decision:</strong> <span id="decision"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Risk Patterns Detected:</h6>
+                        <ul id="riskPatterns"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update API URL to use environment variable or default to local
+        const API_URL = '{{ api_url }}' || 'http://localhost:5000';
+        
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                transaction_id: Date.now(),
+                timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                user_id: 1234,
+                amount: parseFloat(form.amount.value),
+                location: form.location.value,
+                transaction_type: form.transaction_type.value,
+                merchant_category: form.merchant_category.value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/v1/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error processing transaction');
+            }
+        });
+
+        function displayResult(result) {
+            const resultCard = document.getElementById('resultCard');
+            resultCard.style.display = 'block';
+            
+            // Remove existing risk classes
+            resultCard.classList.remove('risk-high', 'risk-medium', 'risk-low');
+            
+            // Add appropriate risk class
+            resultCard.classList.add(`risk-${result.fraud_level}`);
+            
+            document.getElementById('fraudProb').textContent = `${(result.fraud_probability * 100).toFixed(1)}%`;
+            document.getElementById('riskLevel').textContent = result.fraud_level.toUpperCase();
+            document.getElementById('decision').textContent = result.is_fraud ? 'SUSPICIOUS' : 'LEGITIMATE';
+            
+            const riskList = document.getElementById('riskPatterns');
+            riskList.innerHTML = '';
+            for (const [key, value] of Object.entries(result.risk_patterns)) {
+                if (value) {
+                    const li = document.createElement('li');
+                    li.textContent = key.replace(/_/g, ' ').toUpperCase();
+                    riskList.appendChild(li);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
