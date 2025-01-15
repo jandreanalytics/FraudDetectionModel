@@ -1,35 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fraud Detection API Demo</title>
+    <title>Fraud Detection Demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .fraud-high { background-color: #ffebee !important; }
-        .fraud-medium { background-color: #fff3e0 !important; }
-        .fraud-low { background-color: #f1f8e9 !important; }
-        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
     <nav class="navbar navbar-dark bg-primary">
         <div class="container">
-            <span class="navbar-brand">Fraud Detection API Demo</span>
+            <span class="navbar-brand mb-0 h1">Fraud Detection System</span>
             <a href="https://github.com/yourusername/fraud-detection" class="btn btn-outline-light">View on GitHub</a>
         </div>
     </nav>
 
-    <div class="container my-4">
+    <div class="container mt-4">
         <div class="row">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Test the API</h5>
-                    </div>
+                <div class="card shadow-sm">
                     <div class="card-body">
-                        <form id="testForm">
+                        <h5 class="card-title">Test Transaction</h5>
+                        <form id="transactionForm">
                             <div class="mb-3">
                                 <label>Amount ($)</label>
-                                <input type="number" class="form-control" name="amount" value="100.00" step="0.01" required>
+                                <input type="number" class="form-control" name="amount" step="0.01" required>
                             </div>
                             <div class="mb-3">
                                 <label>Location</label>
@@ -39,8 +32,6 @@
                                     <option value="CH">Chicago</option>
                                     <option value="UK">United Kingdom</option>
                                     <option value="RU">Russia</option>
-                                    <option value="BR">Brazil</option>
-                                    <option value="CN">China</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -49,23 +40,39 @@
                                     <option value="pos">POS</option>
                                     <option value="online">Online</option>
                                     <option value="atm">ATM</option>
-                                    <option value="recurring">Recurring</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary">Send Request</button>
+                            <button type="submit" class="btn btn-primary">Analyze Transaction</button>
                         </form>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">API Response</h5>
+                <div id="resultCard" class="card shadow-sm d-none">
+                    <div class="card-body">
+                        <h5 class="card-title">Analysis Result</h5>
+                        <div id="resultContent">
+                            <!-- Results will be inserted here -->
+                        </div>
                     </div>
-                    <div id="resultCard" class="card-body" style="display: none;">
-                        <div id="resultContent"></div>
-                        <pre id="rawResponse" class="mt-3"></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">About This Project</h5>
+                        <p>This fraud detection system uses machine learning to analyze transactions in real-time. Features include:</p>
+                        <ul>
+                            <li>Real-time transaction analysis</li>
+                            <li>Multiple risk factor consideration</li>
+                            <li>Location-based risk assessment</li>
+                            <li>Pattern recognition for fraud detection</li>
+                        </ul>
+                        <p>Built with Python, Flask, scikit-learn, and modern web technologies.</p>
                     </div>
                 </div>
             </div>
@@ -73,9 +80,9 @@
     </div>
 
     <script>
-        const API_URL = '{{ api_url }}';
-        
-        document.getElementById('testForm').addEventListener('submit', async (e) => {
+        const API_URL = 'https://fraud-detection-api-fl72.onrender.com';
+
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const data = {
@@ -95,42 +102,34 @@
                 });
 
                 const result = await response.json();
-                displayResult(result, data);
+                displayResult(result);
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error calling API');
+                alert('Error processing transaction');
             }
         });
 
-        function displayResult(result, request) {
+        function displayResult(result) {
             const resultCard = document.getElementById('resultCard');
             const resultContent = document.getElementById('resultContent');
-            const rawResponse = document.getElementById('rawResponse');
             
-            resultCard.style.display = 'block';
+            resultCard.classList.remove('d-none');
+            resultCard.classList.add('animate__animated', 'animate__fadeIn');
             
-            const levelEmoji = {
-                high: '🚨',
-                medium: '⚠️',
-                low: '📊',
-                none: '✅'
+            const riskColor = {
+                high: 'danger',
+                medium: 'warning',
+                low: 'info',
+                none: 'success'
             };
-
+            
             resultContent.innerHTML = `
-                <div class="alert alert-${result.fraud_level === 'high' ? 'danger' : 
-                                       result.fraud_level === 'medium' ? 'warning' : 
-                                       result.fraud_level === 'low' ? 'info' : 'success'}">
-                    <h4>${levelEmoji[result.fraud_level]} Risk Level: ${result.fraud_level.toUpperCase()}</h4>
+                <div class="alert alert-${riskColor[result.fraud_level]}">
+                    <h4>Risk Level: ${result.fraud_level.toUpperCase()}</h4>
                     <p>Fraud Probability: ${(result.fraud_probability * 100).toFixed(1)}%</p>
                     <p>Decision: ${result.is_fraud ? '🚫 SUSPICIOUS' : '✅ LEGITIMATE'}</p>
-                    ${Object.entries(result.risk_patterns)
-                        .filter(([_, value]) => value)
-                        .map(([key]) => `<div class="small">⚠️ ${key.replace(/_/g, ' ').toUpperCase()}</div>`)
-                        .join('')}
                 </div>
             `;
-
-            rawResponse.textContent = JSON.stringify({ request, response: result }, null, 2);
         }
     </script>
 </body>

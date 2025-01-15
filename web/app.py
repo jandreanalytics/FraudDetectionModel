@@ -7,8 +7,7 @@ CORS(app)
 
 @app.route('/')
 def index():
-    api_url = 'https://fraud-detection-api-fl72.onrender.com'  # Your Render API URL
-    return render_template('index.html', api_url=api_url)
+    return render_template('index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
