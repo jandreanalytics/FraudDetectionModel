@@ -80,6 +80,8 @@
     </div>
 
     <script>
+        const API_URL = 'https://fraud-detection-api-fl72.onrender.com';
+
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -93,7 +95,7 @@
             };
 
             try {
-                const response = await fetch('/api/v1/predict', {
+                const response = await fetch(`${API_URL}/api/v1/predict`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)

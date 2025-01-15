@@ -1,6 +1,6 @@
 # Fraud Detection System
 
-A real-time transaction fraud detection system using machine learning.
+Full-stack fraud detection system with ML-powered API and interactive frontend.
 
 ## Features
 - Real-time transaction analysis
